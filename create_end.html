@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Create End</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Create End</h2>
+      <div id="sessionInfo"></div>
+      <form action="php/create_end.php" method="post" id="endForm">
+        <div class="form-group">
+          <label for="session">Shooting Session:</label>
+          <select
+            name="session"
+            id="session"
+            class="form-control"
+            readonly
+          ></select>
+        </div>
+        <div class="form-group">
+          <label for="distance">Distance:</label>
+          <select name="distance" id="distance" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label for="shootingRange">Shooting Range:</label>
+          <select
+            name="shootingRange"
+            id="shootingRange"
+            class="form-control"
+          ></select>
+        </div>
+        <div class="form-group">
+          <label for="arrow1">Arrow 1:</label>
+          <input
+            type="number"
+            name="arrow1"
+            id="arrow1"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <div class="form-group">
+          <label for="arrow2">Arrow 2:</label>
+          <input
+            type="number"
+            name="arrow2"
+            id="arrow2"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <div class="form-group">
+          <label for="arrow3">Arrow 3:</label>
+          <input
+            type="number"
+            name="arrow3"
+            id="arrow3"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <div class="form-group">
+          <label for="arrow4">Arrow 4:</label>
+          <input
+            type="number"
+            name="arrow4"
+            id="arrow4"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <div class="form-group">
+          <label for="arrow5">Arrow 5:</label>
+          <input
+            type="number"
+            name="arrow5"
+            id="arrow5"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <div class="form-group">
+          <label for="arrow6">Arrow 6:</label>
+          <input
+            type="number"
+            name="arrow6"
+            id="arrow6"
+            class="form-control"
+            min="0"
+            max="10"
+          />
+        </div>
+        <input type="hidden" name="archer" id="archer" />
+        <button type="submit" class="btn btn-primary">Create End</button>
+      </form>
+      <div id="totalScore">
+        <h3>Total Score: <span id="scoreDisplay">0</span></h3>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get("session_id");
+        const archerId = urlParams.get("archer_id");
+        const archerName = urlParams.get("archer_name");
+        const competitionName = urlParams.get("competition_name");
+        const roundName = urlParams.get("round_name");
+        const divisionName = urlParams.get("division_name");
+        const className = urlParams.get("class_name");
+
+        document.getElementById(
+          "session"
+        ).innerHTML = `<option value="${sessionId}">${sessionId}</option>`;
+        document.getElementById("archer").value = archerId;
+
+        document.getElementById("sessionInfo").innerHTML = `
+        <p><strong>Archer Name:</strong> ${archerName}</p>
+        <p><strong>Competition Name:</strong> ${competitionName}</p>
+        <p><strong>Round Name:</strong> ${roundName}</p>
+        <p><strong>Division Name:</strong> ${divisionName}</p>
+        <p><strong>Class Name:</strong> ${className}</p>
+      `;
+
+        fetchData("distance", "php/fetch_data.php?type=distances");
+        fetchData("shootingRange", "php/fetch_data.php?type=shootingRanges");
+
+        document
+          .getElementById("endForm")
+          .addEventListener("submit", function (event) {
+            if (!validateScores()) {
+              event.preventDefault();
+            }
+          });
+
+        document.querySelectorAll('input[type="number"]').forEach((input) => {
+          input.addEventListener("input", calculateTotalScore);
+        });
+
+        checkEndsNeeded();
+      });
+
+      function validateScores() {
+        let scores = [];
+        for (let i = 1; i <= 6; i++) {
+          let score = parseInt(document.getElementById("arrow" + i).value);
+          if (!isNaN(score)) {
+            scores.push(score);
+          }
+        }
+
+        for (let i = 0; i < scores.length - 1; i++) {
+          if (scores[i] < scores[i + 1]) {
+            alert("Scores must be entered in descending order.");
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function calculateTotalScore() {
+        let totalScore = 0;
+        for (let i = 1; i <= 6; i++) {
+          let score = parseInt(document.getElementById("arrow" + i).value) || 0;
+          totalScore += score;
+        }
+        document.getElementById("scoreDisplay").innerText = totalScore;
+      }
+
+      function checkEndsNeeded() {
+        const sessionId = document.getElementById("session").value;
+        fetch(`php/check_ends.php?session_id=${sessionId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.ends_needed) {
+              alert("No more ends are needed for this session.");
+              document.getElementById("endForm").style.display = "none";
+            }
+          })
+          .catch((error) => console.error("Error checking ends:", error));
+      }
+
+      function fetchTotalScore(sessionId) {
+        fetch(`php/fetch_total_score.php?session_id=${sessionId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("totalScore").innerHTML = `
+            <h3>Total Score: ${data.total_score}</h3>
+          `;
+          })
+          .catch((error) =>
+            console.error("Error fetching total score:", error)
+          );
+      }
+
+      function fetchData(elementId, url) {
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            let select = document.getElementById(elementId);
+            data.forEach((item) => {
+              let option = document.createElement("option");
+              option.value = item.value;
+              option.textContent = item.text;
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      }
+    </script>
+  </body>
+</html>
