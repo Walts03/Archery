@@ -1,0 +1,72 @@
+@startuml
+!define RECTANGLE class
+skinparam linetype ortho
+
+package "Archery Project" {
+  RECTANGLE "index.html" {
+    .. Main HTML file ..
+  }
+
+  RECTANGLE "create_end.html" {
+    .. HTML for creating an end ..
+  }
+
+  RECTANGLE "create_shooting_session.html" {
+    .. HTML for creating a shooting session ..
+  }
+
+  RECTANGLE "css" {
+    .. CSS files for styling ..
+  }
+
+  package "js" {
+    class "scripts.js" {
+      .. JavaScript logic ..
+    }
+  }
+
+  package "php" {
+    class "check_end.php" {
+      .. Checks the end data ..
+    }
+
+    class "create_end.php" {
+      .. Handles end creation ..
+    }
+
+    class "create_shooting_session.php" {
+      .. Handles shooting session creation ..
+    }
+
+    class "db_connect.php" {
+      .. Database connection ..
+    }
+
+    class "fetch_data.php" {
+      .. Fetches data from the database ..
+    }
+
+    class "fetch_total_score.php" {
+      .. Fetches total scores from the database ..
+    }
+  }
+
+  "index.html" --> "js.scripts.js"
+  "index.html" --> "css"
+  "create_end.html" --> "js.scripts.js"
+  "create_shooting_session.html" --> "js.scripts.js"
+
+  "js.scripts.js" --> "php.check_end.php"
+  "js.scripts.js" --> "php.create_end.php"
+  "js.scripts.js" --> "php.create_shooting_session.php"
+  "js.scripts.js" --> "php.fetch_data.php"
+  "js.scripts.js" --> "php.fetch_total_score.php"
+
+  "php.check_end.php" --> "php.db_connect.php"
+  "php.create_end.php" --> "php.db_connect.php"
+  "php.create_shooting_session.php" --> "php.db_connect.php"
+  "php.fetch_data.php" --> "php.db_connect.php"
+  "php.fetch_total_score.php" --> "php.db_connect.php"
+}
+
+@enduml
